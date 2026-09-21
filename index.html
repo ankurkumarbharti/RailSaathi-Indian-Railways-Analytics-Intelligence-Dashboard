@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Indian Railways Analytics & Intelligence Platform | Ministry of Railways</title>
+  <meta name="description" content="Enterprise-grade Business Intelligence Dashboard for Indian Railways – 15 years of data analysis (FY2009–FY2024) covering passengers, revenue, freight, safety, zone performance, and AI-powered forecasting." />
+  <meta name="author" content="Ministry of Railways, Government of India" />
+  <meta name="keywords" content="Indian Railways, BI Dashboard, Analytics, Freight, Passenger, Safety, Zone Performance, Forecasting" />
+
+  <!-- Preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- Our CSS -->
+  <link rel="stylesheet" href="styles.css?v=20260618" />
+
+  <style>
+    /* Extra page-specific overrides */
+    .stat-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+      background: rgba(37,99,212,0.1); border: 1px solid rgba(37,99,212,0.25);
+      color: #60a5fa; margin: 2px;
+    }
+    .arrow-up::before { content: '▲ '; font-size: 9px; }
+    .arrow-down::before { content: '▼ '; font-size: 9px; }
+    .stat-chip.red { background: rgba(192,57,43,0.1); border-color: rgba(192,57,43,0.25); color: #e74c3c; }
+    .stat-chip.green { background: rgba(26,188,156,0.1); border-color: rgba(26,188,156,0.25); color: #1abc9c; }
+    .stat-chip.gold { background: rgba(243,156,18,0.1); border-color: rgba(243,156,18,0.25); color: #f39c12; }
+    .summary-box {
+      background: rgba(30,77,154,0.08); border: 1px solid rgba(30,77,154,0.18);
+      border-radius: 10px; padding: 14px 16px; font-size: 12px; color: #a8c4d8;
+      line-height: 1.8; margin-top: 12px;
+    }
+    .summary-box strong { color: #e8f4f8; }
+    .mini-kpi-row { display: flex; gap: 12px; margin-top: 14px; }
+    .mini-kpi {
+      flex: 1; padding: 10px 12px;
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 8px; text-align: center;
+    }
+    .mini-kpi-val { font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; color: #fff; }
+    .mini-kpi-lbl { font-size: 9.5px; color: #5d8aa8; text-transform: uppercase; letter-spacing: 0.4px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .covid-annotation {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(192,57,43,0.1); border: 1px solid rgba(192,57,43,0.3);
+      border-radius: 8px; padding: 5px 10px; font-size: 11px; color: #e74c3c;
+      font-weight: 600; margin-top: 8px;
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, #f39c12, #e67e22);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .forecast-annotation {
+      background: linear-gradient(135deg, rgba(142,68,173,0.12), rgba(37,99,212,0.12));
+      border: 1px solid rgba(142,68,173,0.25);
+      border-radius: 10px; padding: 14px 16px; margin-bottom: 18px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .forecast-annotation-icon { font-size: 28px; }
+    .forecast-annotation-text { font-size: 12px; color: #a8c4d8; line-height: 1.6; }
+    .forecast-annotation-text strong { color: #c084fc; }
+  </style>
+</head>
+<body>
+
+<div class="app-layout">
+  <!-- ═══════════════════════════════════════════
+       SIDEBAR
+       ═══════════════════════════════════════════ -->
+  <nav class="sidebar" role="navigation" aria-label="Main navigation">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-emblem" aria-hidden="true">🚂</div>
+        <div class="logo-text">
+          <div class="logo-title">Indian Railways<br>Analytics Platform</div>
+          <div class="logo-sub">BI Intelligence · FY2009–24</div>
+        </div>
+      </div>
+      <div class="sidebar-meta">
+        <div class="live-dot"></div>
+        <span class="sidebar-meta-text">Live Data · Ministry of Railways</span>
+      </div>
+    </div>
+
+    <div class="sidebar-nav">
+      <div class="nav-section-label">Overview</div>
+
+      <div class="nav-item active" data-page="executive" role="button" aria-label="Executive Overview" tabindex="0">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">Executive Overview</span>
+        <span class="nav-badge badge-gold">FY24</span>
+      </div>
+
+      <div class="nav-section-label" style="margin-top:8px;">Analytics</div>
+
+      <div class="nav-item" data-page="passenger" role="button" aria-label="Passenger Analytics" tabindex="0">
+        <span class="nav-icon">🧑‍🤝‍🧑</span>
+        <span class="nav-label">Passenger Analytics</span>
+        <span class="nav-badge badge-blue">10.2B</span>
+      </div>
+
+      <div class="nav-item" data-page="revenue" role="button" aria-label="Revenue Analytics" tabindex="0">
+        <span class="nav-icon">💰</span>
+        <span class="nav-label">Revenue Analytics</span>
+        <span class="nav-badge badge-green">+39%</span>
+      </div>
+
+      <div class="nav-item" data-page="freight" role="button" aria-label="Freight Analytics" tabindex="0">
+        <span class="nav-icon">📦</span>
+        <span class="nav-label">Freight Analytics</span>
+        <span class="nav-badge badge-blue">1.62B MT</span>
+      </div>
+
+      <div class="nav-section-label" style="margin-top:8px;">Operations</div>
+
+      <div class="nav-item" data-page="safety" role="button" aria-label="Safety & Accidents" tabindex="0">
+        <span class="nav-icon">🛡️</span>
+        <span class="nav-label">Safety & Accidents</span>
+        <span class="nav-badge badge-red">-77%</span>
+      </div>
+
+      <div class="nav-item" data-page="cancellation" role="button" aria-label="Cancellation & Delay" tabindex="0">
+        <span class="nav-icon">⏱️</span>
+        <span class="nav-label">Cancellation & Delay</span>
+        <span class="nav-badge badge-gold">87.3%</span>
+      </div>
+
+      <div class="nav-section-label" style="margin-top:8px;">Performance</div>
+
+      <div class="nav-item" data-page="zone" role="button" aria-label="Zone Performance" tabindex="0">
+        <span class="nav-icon">🗺️</span>
+        <span class="nav-label">Zone Performance</span>
+        <span class="nav-badge badge-blue">17 Zones</span>
+      </div>
+
+      <div class="nav-item" data-page="forecast" role="button" aria-label="Forecasting & AI Insights" tabindex="0">
+        <span class="nav-icon">🔮</span>
+        <span class="nav-label">AI Forecasting</span>
+        <span class="nav-badge badge-green" style="background:rgba(142,68,173,0.15); color:#c084fc; border-color:rgba(142,68,173,0.3);">AI</span>
+      </div>
+
+      <div class="nav-item" data-page="yearexplorer" role="button" aria-label="Year Data Explorer" tabindex="0">
+        <span class="nav-icon">📅</span>
+        <span class="nav-label">Year Explorer</span>
+        <span class="nav-badge badge-gold">16 Yrs</span>
+      </div>
+
+      <div class="nav-item" data-page="sandbox" role="button" aria-label="Analytics Sandbox" tabindex="0">
+        <span class="nav-icon">🧪</span>
+        <span class="nav-label">Analytics Sandbox</span>
+        <span class="nav-badge badge-green" style="background:rgba(26,188,156,0.15); color:#1abc9c; border-color:rgba(26,188,156,0.3);">Sandbox</span>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-footer-text">
+        <strong>🇮🇳 Ministry of Railways</strong>
+        Government of India · Rail Bhawan<br>
+        Data: Annual Statistical Statements<br>
+        FY2009–FY2024 · 15-Year Analysis
+      </div>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════
+       MAIN CONTENT
+       ═══════════════════════════════════════════ -->
+  <main class="main-content" role="main">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+      <div class="topbar-title">
+        <h1 id="topbar-title">Executive Overview</h1>
+        <div class="topbar-breadcrumb" id="topbar-breadcrumb">Ministry of Railways · Railway Board · FY2009–2024</div>
+      </div>
+      <div class="topbar-actions">
+        <span id="backend-status-pill" class="badge badge-js">Backend: Client-Side Fallback</span>
+        <span id="active-filters" class="section-tag tag-live" style="font-size:10px;">No filters</span>
+        <button class="topbar-btn" onclick="window.print()" aria-label="Export Report">
+          📥 Export
+        </button>
+        <button class="topbar-btn" onclick="location.reload()" aria-label="Refresh Data">
+          🔄 Refresh
+        </button>
+        <div class="time-display" id="time-display"></div>
+      </div>
+    </header>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar" role="search" aria-label="Dashboard Filters">
+      <span class="filter-label">🔽 Filters:</span>
+      <div class="filter-group">
+        <label for="filter-year" class="visually-hidden">Year</label>
+        <select class="filter-select" id="filter-year" aria-label="Filter by Year">
+          <option value="all">📅 All Years (2009–2024)</option>
+          <option value="2024">FY2024</option>
+          <option value="2023">FY2023</option>
+          <option value="2022">FY2022</option>
+          <option value="2021">FY2021</option>
+          <option value="2020">FY2020 (COVID)</option>
+          <option value="2019">FY2019 (Pre-COVID)</option>
+          <option value="2017">FY2017</option>
+          <option value="2015">FY2015</option>
+          <option value="2012">FY2012</option>
+          <option value="2009">FY2009</option>
+        </select>
+
+        <label for="filter-zone" class="visually-hidden">Zone</label>
+        <select class="filter-select" id="filter-zone" aria-label="Filter by Zone">
+          <option value="all">🗺️ All Zones</option>
+          <option value="Northern">Northern Railway</option>
+          <option value="Southern">Southern Railway</option>
+          <option value="Central">Central Railway</option>
+          <option value="Western">Western Railway</option>
+          <option value="Eastern">Eastern Railway</option>
+          <option value="South Central">South Central Railway</option>
+          <option value="South Eastern">South Eastern Railway</option>
+          <option value="North Eastern">North Eastern Railway</option>
+          <option value="Northeast Frontier">Northeast Frontier Railway</option>
+          <option value="East Central">East Central Railway</option>
+          <option value="North Central">North Central Railway</option>
+          <option value="North Western">North Western Railway</option>
+          <option value="South Western">South Western Railway</option>
+          <option value="East Coast">East Coast Railway</option>
+          <option value="South East Central">South East Central Railway</option>
+          <option value="West Central">West Central Railway</option>
+          <option value="Metro">Metro Railway, Kolkata</option>
+        </select>
+
+        <label for="filter-train" class="visually-hidden">Train Type</label>
+        <select class="filter-select" id="filter-train" aria-label="Filter by Train Type">
+          <option value="all">🚆 All Train Types</option>
+          <option value="vande">Vande Bharat Express</option>
+          <option value="rajdhani">Rajdhani Express</option>
+          <option value="shatabdi">Shatabdi Express</option>
+          <option value="duronto">Duronto Express</option>
+          <option value="mail">Mail / Express</option>
+          <option value="passenger">Passenger Trains</option>
+          <option value="freight">Freight Trains</option>
+        </select>
+      </div>
+      <button class="filter-reset" id="reset-filters" aria-label="Reset all filters">✕ Reset</button>
+    </div>
+
+    <!-- ════════════════════════════════════════
+         PAGE: EXECUTIVE OVERVIEW
+         ════════════════════════════════════════ -->
+    <div class="page-content">
+
+      <!-- PAGE 1: EXECUTIVE OVERVIEW -->
+      <div id="page-executive" class="page active">
+
+        <!-- KPI GRID -->
+        <div class="kpi-grid">
+          <div class="kpi-card" id="kpi-passengers" style="--kpi-color: #2563d4;"></div>
+          <div class="kpi-card" id="kpi-pass-rev" style="--kpi-color: #60a5fa;"></div>
+          <div class="kpi-card" id="kpi-freight-rev" style="--kpi-color: #1abc9c;"></div>
+          <div class="kpi-card" id="kpi-total-rev" style="--kpi-color: #f39c12;"></div>
+          <div class="kpi-card" id="kpi-route-km" style="--kpi-color: #f59e0b;"></div>
+          <div class="kpi-card" id="kpi-accidents" style="--kpi-color: #e74c3c;"></div>
+          <div class="kpi-card" id="kpi-punctuality" style="--kpi-color: #1abc9c;"></div>
+          <div class="kpi-card" id="kpi-freight" style="--kpi-color: #0097a7;"></div>
+        </div>
+
+        <!-- REVENUE TREND (WIDE) -->
+        <div class="chart-grid" style="grid-template-columns: 1fr;">
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">📈 Revenue Composition & Growth Trend (FY2009–FY2024)</div>
+                <div class="chart-card-sub">Passenger + Freight breakdown with Total Revenue line — ₹ Thousand Crore</div>
+              </div>
+              <div class="chart-toolbar">
+                <span class="section-tag tag-fy24">15 Years</span>
+              </div>
+            </div>
+            <div class="chart-container tall">
+              <canvas id="chart-revenue-trend"></canvas>
+            </div>
+            <div class="summary-box">
+              <strong>Key Insight:</strong> Total revenue grew from <strong>₹83,800 Cr (FY2009)</strong> to <strong>₹2,76,000 Cr (FY2024)</strong> — a <strong>229% increase</strong> over 15 years.
+              Freight revenue consistently contributes ~68% of total IR earnings. COVID-19 impact in FY2020-21 caused a temporary revenue dip of ~18%, fully recovered by FY2022.
+            </div>
+          </div>
+        </div>
+
+        <!-- PASSENGER + FREIGHT TRENDS -->
+        <div class="chart-grid chart-grid-2">
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">🧑‍🤝‍🧑 Passenger Traffic Trend</div>
+                <div class="chart-card-sub">Total passengers in millions (2009–2024)</div>
+              </div>
+              <div class="covid-annotation">⚠️ COVID Impact 2020–21</div>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-passenger-trend"></canvas>
+            </div>
+            <div class="mini-kpi-row">
+              <div class="mini-kpi"><div class="mini-kpi-val" style="color:#2563d4;">7,500M</div><div class="mini-kpi-lbl">FY24 Passengers</div></div>
+              <div class="mini-kpi"><div class="mini-kpi-val" style="color:#1abc9c;">+4.1%</div><div class="mini-kpi-lbl">Since FY2009</div></div>
+              <div class="mini-kpi"><div class="mini-kpi-val" style="color:#f39c12;">1,252M</div><div class="mini-kpi-lbl">COVID Low FY21</div></div>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">📦 Freight Traffic Trend</div>
+                <div class="chart-card-sub">Total freight loading in million tonnes (2009–2024)</div>
+              </div>
+              <span class="section-tag tag-fy24">Record: 1,620 MT</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-freight-trend"></canvas>
+            </div>
+            <div class="mini-kpi-row">
+              <div class="mini-kpi"><div class="mini-kpi-val" style="color:#1abc9c;">1,588</div><div class="mini-kpi-lbl">MT FY24</div></div>
+              <div class="mini-kpi"><div class="mini-kpi-val" style="color:#f39c12;">+100.8%</div><div class="mini-kpi-lbl">Since FY2009</div></div>
+              <div class="mini-kpi"><div class="mini-kpi-val" style="color:#e74c3c;">1,070</div><div class="mini-kpi-lbl">COVID Low FY21</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ZONE MAP -->
+        <div class="chart-card mb-24">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-card-title">🗺️ Interactive Railway Zone Map of India</div>
+              <div class="chart-card-sub">Click/hover markers to view zone-wise revenue, passengers, freight & safety stats</div>
+            </div>
+            <div class="chart-toolbar">
+              <span class="section-tag tag-live">Interactive</span>
+              <span class="section-tag tag-fy24">17 Zones</span>
+            </div>
+          </div>
+          <div class="map-container" style="height:450px;">
+            <div id="zone-map"></div>
+            <div class="map-legend" style="position:absolute; bottom:16px; right:16px; z-index:999;">
+              <div class="legend-title">Revenue Tier</div>
+              <div class="legend-item"><div class="legend-dot" style="background:#f39c12;"></div> &gt; ₹30K Cr</div>
+              <div class="legend-item"><div class="legend-dot" style="background:#2563d4;"></div> ₹20K–30K Cr</div>
+              <div class="legend-item"><div class="legend-dot" style="background:#1abc9c;"></div> ₹12K–20K Cr</div>
+              <div class="legend-item"><div class="legend-dot" style="background:#5d8aa8;"></div> &lt; ₹12K Cr</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUMMARY METRICS ROW -->
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div class="chart-card-title">📋 15-Year Performance Summary (FY2009 → FY2024)</div>
+          </div>
+          <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:14px; margin-top:4px;">
+            <div class="mini-kpi" style="border-color: rgba(37,99,212,0.2); padding:16px;">
+              <div class="mini-kpi-val" style="font-size:24px; color:#f39c12;">209%</div>
+              <div class="mini-kpi-lbl" style="margin-top:4px;">Revenue Growth</div>
+              <div style="font-size:10px; color:#5d8aa8; margin-top:3px;">₹83.3K Cr → ₹2.58L Cr</div>
+            </div>
+            <div class="mini-kpi" style="border-color: rgba(26,188,156,0.2); padding:16px;">
+              <div class="mini-kpi-val" style="font-size:24px; color:#1abc9c;">101%</div>
+              <div class="mini-kpi-lbl" style="margin-top:4px;">Freight Growth</div>
+              <div style="font-size:10px; color:#5d8aa8; margin-top:3px;">791 MT → 1,588 MT</div>
+            </div>
+            <div class="mini-kpi" style="border-color: rgba(231,76,60,0.2); padding:16px;">
+              <div class="mini-kpi-val" style="font-size:24px; color:#e74c3c;">-77%</div>
+              <div class="mini-kpi-lbl" style="margin-top:4px;">Accident Reduction</div>
+              <div style="font-size:10px; color:#5d8aa8; margin-top:3px;">141 → 33 accidents</div>
+            </div>
+            <div class="mini-kpi" style="border-color: rgba(243,156,18,0.2); padding:16px;">
+              <div class="mini-kpi-val" style="font-size:24px; color:#f39c12;">272%</div>
+              <div class="mini-kpi-lbl" style="margin-top:4px;">Electrification</div>
+              <div style="font-size:10px; color:#5d8aa8; margin-top:3px;">18K → 68K km</div>
+            </div>
+            <div class="mini-kpi" style="border-color: rgba(192,57,43,0.2); padding:16px;">
+              <div class="mini-kpi-val" style="font-size:24px; color:#c084fc;">+12.8pp</div>
+              <div class="mini-kpi-lbl" style="margin-top:4px;">Punctuality Gain</div>
+              <div style="font-size:10px; color:#5d8aa8; margin-top:3px;">74.5% → 87.3%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════
+           PAGE 2: PASSENGER ANALYTICS
+           ════════════════════════════════════════ -->
+      <div id="page-passenger" class="page">
+        <div class="page-banner">
+          <div class="banner-icon">🧑‍🤝‍🧑</div>
+          <div class="banner-text">
+            <div class="banner-title">Passenger Analytics — FY2009 to FY2024</div>
+            <div class="banner-desc">Comprehensive analysis of passenger traffic trends, class-wise breakdown, demand seasonality, COVID-19 impact & premium train growth</div>
+          </div>
+          <div class="banner-stats">
+            <div class="banner-stat"><div class="banner-stat-value">7,500M</div><div class="banner-stat-label">FY24 Passengers</div></div>
+            <div class="banner-stat"><div class="banner-stat-value">1,410</div><div class="banner-stat-label">Billion PKM</div></div>
+            <div class="banner-stat"><div class="banner-stat-value">136</div><div class="banner-stat-label">Vande Bharat</div></div>
+          </div>
+        </div>
+
+        <div class="chart-grid chart-grid-2">
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">📈 Passenger Traffic Trend</div>
+                <div class="chart-card-sub">Total passengers booked (millions) · COVID highlighted</div>
+              </div>
+              <span class="covid-annotation">⚠️ COVID-19 Drop 2020</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-passenger-trend-p"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">🗂️ Passenger Class Breakdown (FY2024)</div>
+                <div class="chart-card-sub">2nd Class · Sleeper · Upper Class</div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-passenger-class"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-grid chart-grid-2">
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">🛤️ Passenger-Kilometre Trend</div>
+                <div class="chart-card-sub">Billion passenger-km — indicates real traffic intensity</div>
+              </div>
+              <span class="section-tag tag-fy24">1,510B PKM</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-passenger-km"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">🗓️ Seasonal Demand Index</div>
+                <div class="chart-card-sub">Month-wise relative demand (base = 100) · Peak vs Off-peak</div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-seasonal"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-grid chart-grid-2">
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">🚄 Premium Train Fleet Growth</div>
+                <div class="chart-card-sub">Vande Bharat, Rajdhani, Shatabdi, Duronto fleet count</div>
+              </div>
+              <span class="section-tag tag-live" style="background:rgba(192,0,212,0.1); color:#c084fc; border-color:rgba(192,0,212,0.25);">136 VB</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-premium-trains"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">👷 Railway Workforce Trend</div>
+                <div class="chart-card-sub">Total employees — productivity vs efficiency</div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-employees"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div class="chart-card-title">📊 Passenger Traffic — Zone-wise Summary (FY2024)</div>
+            <div class="chart-card-sub">Millions of passengers by railway zone</div>
+          </div>
+          <div class="chart-container" style="height:280px;">
+            <canvas id="chart-zone-passengers-p"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════
+           PAGE 3: REVENUE ANALYTICS
+           ════════════════════════════════════════ -->
+      <div id="page-revenue" class="page">
+        <div class="page-banner">
+          <div class="banner-icon">💰</div>
+          <div class="banner-text">
+            <div class="banner-title">Revenue Analytics — FY2009 to FY2024</div>
+            <div class="banner-desc">Earnings growth, operating ratio, zone-wise revenue distribution, YoY comparison and 5-year forecast</div>
+          </div>
+          <div class="banner-stats">
+            <div class="banner-stat"><div class="banner-stat-value">₹2.58L Cr</div><div class="banner-stat-label">Total Revenue FY24</div></div>
+            <div class="banner-stat"><div class="banner-stat-value">98.4%</div><div class="banner-stat-label">Operating Ratio</div></div>
+            <div class="banner-stat"><div class="banner-stat-value">209%</div><div class="banner-stat-label">15Y Growth</div></div>
+          </div>
+        </div>
+
+        <div class="chart-card mb-24">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-card-title">📈 Revenue Composition Trend (₹ Thousand Crore)</div>
+              <div class="chart-card-sub">Passenger + Freight + Other with Total Revenue overlay</div>
+            </div>
+          </div>
+          <div class="chart-container tall">
+            <canvas id="chart-revenue-trend-r"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-grid chart-grid-2">
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">⚖️ Operating Ratio Trend</div>
+                <div class="chart-card-sub">Below 100% = profitable operations · COVID impact visible</div>
+              </div>
+              <span class="section-tag" style="background:rgba(26,188,156,0.1); color:#1abc9c; border-color:rgba(26,188,156,0.25);">89.2% FY24</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-op-ratio"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">📊 Year-on-Year Revenue Growth</div>
+                <div class="chart-card-sub">Annual revenue change (%) · Red = decline · Blue = growth</div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-yoy-revenue"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-card-title">🏆 Zone-wise Revenue Rankings (FY2024)</div>
+              <div class="chart-card-sub">Revenue in ₹ Crore by railway zone — ranked by performance</div>
+            </div>
+          </div>
+          <div class="chart-container" style="height:380px;">
+            <canvas id="chart-zone-revenue"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════
+           PAGE 4: FREIGHT ANALYTICS
+           ════════════════════════════════════════ -->
+      <div id="page-freight" class="page">
+        <div class="page-banner">
+          <div class="banner-icon">📦</div>
+          <div class="banner-text">
+            <div class="banner-title">Freight Analytics — FY2009 to FY2024</div>
+            <div class="banner-desc">Commodity-wise loading, net tonne-km, revenue, electrification impact & rolling stock trends</div>
+          </div>
+          <div class="banner-stats">
+            <div class="banner-stat"><div class="banner-stat-value">1,588 MT</div><div class="banner-stat-label">Freight FY24</div></div>
+            <div class="banner-stat"><div class="banner-stat-value">₹1.78L Cr</div><div class="banner-stat-label">Freight Revenue</div></div>
+            <div class="banner-stat"><div class="banner-stat-value">47.7%</div><div class="banner-stat-label">Coal Share</div></div>
+          </div>
+        </div>
+
+        <div class="chart-grid chart-grid-2">
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">📈 Freight Loading Trend</div>
+                <div class="chart-card-sub">Total freight (million tonnes) · FY2009–FY2024</div>
+              </div>
+              <span class="section-tag tag-fy24">Record 1,620 MT</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-freight-trend-f"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">🥧 Commodity Mix (FY2024)</div>
+                <div class="chart-card-sub">Freight by commodity category — percentage share</div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-freight-pie"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-grid chart-grid-2">
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">🚂 Net Tonne-Kilometre (NTK) Trend</div>
+                <div class="chart-card-sub">Billion NTK — actual transport work done</div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-ntk"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">🏗️ Rolling Stock Growth</div>
+                <div class="chart-card-sub">Locomotives, Coaches (÷10), Wagons (÷100)</div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-rolling-stock"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-card-title">⚡ Electrification Progress — Route KM</div>
+              <div class="chart-card-sub">Electrified vs total route KM with electrification % overlay · Green Railways mission</div>
+            </div>
+            <span class="section-tag tag-fy24" style="background:rgba(26,188,156,0.1); color:#1abc9c; border-color:rgba(26,188,156,0.25);">100% Electrified BG</span>
+          </div>
+          <div class="chart-container tall">
+            <canvas id="chart-electrification"></canvas>
+          </div>
+        </div>
+
+        <div class="summary-box">
+          <strong>Freight Key Insights:</strong>
+          Coal dominates freight at <strong>47.9% (776 MT)</strong>, followed by Iron &amp; Steel <strong>11.6% (188 MT)</strong> and Cement <strong>9.0% (146 MT)</strong>.
+          Net Tonne-KM grew from <strong>631 billion (FY2009)</strong> to <strong>1,233 billion (FY2024)</strong> — a 95.4% increase, indicating massive efficiency gains.
+          Complete BG electrification reduced diesel expenditure significantly, contributing to operating ratio improvement.
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════
+           PAGE 5: SAFETY & ACCIDENTS
+           ════════════════════════════════════════ -->
+      <div id="page-safety" class="page">
+        <div class="page-banner">
+          <div class="banner-icon">🛡️</div>
+          <div class="banner-text">
+            <div class="banner-title">Safety & Accident Analytics — FY2009 to FY2024</div>
+            <div class="banner-desc">Accident classification, casualty trends, level crossing eliminations, risk heatmap & safety improvement analysis</div>
+          </div>
+          <div class="banner-stats">
+            <div class="banner-stat"><div class="banner-stat-value" style="color:#e74c3c;">33</div><div class="banner-stat-label">Accidents FY24</div></div>
+            <div class="banner-stat"><div class="banner-stat-value" style="color:#1abc9c;">-77%</div><div class="banner-stat-label">Since FY2009</div></div>
+            <div class="banner-stat"><div class="banner-stat-value">9,500</div><div class="banner-stat-label">Level Crossings Left</div></div>
+          </div>
+        </div>
+
+        <div class="chart-grid chart-grid-2">
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">📉 Accident Classification Trend</div>
+                <div class="chart-card-sub">Derailments · Collisions · Level Crossing · Fires stacked</div>
+              </div>
+              <span class="section-tag tag-fy24" style="background:rgba(26,188,156,0.1); color:#1abc9c; border-color:rgba(26,188,156,0.25);">Record Low 33</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-accident-trend"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">💔 Casualties Trend</div>
+                <div class="chart-card-sub">Total persons killed/injured in train accidents</div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-casualties"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-card mb-24">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-card-title">📉 Unmanned Level Crossing Elimination</div>
+              <div class="chart-card-sub">Number eliminated annually — 31,836 in 2009 to 9,500 in 2024 (70% elimination)</div>
+            </div>
+            <span class="section-tag tag-fy24" style="background:rgba(26,188,156,0.1); color:#1abc9c; border-color:rgba(26,188,156,0.25);">70% Eliminated</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="chart-level-crossing"></canvas>
+          </div>
+        </div>
+
+        <!-- RISK HEATMAP -->
+        <div class="chart-card mb-24">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-card-title">🌡️ Zone × Year Accident Risk Heatmap</div>
+              <div class="chart-card-sub">Estimated accidents per zone per year (2009–2024) · Darker = more accidents · Hover for details</div>
+            </div>
+            <span class="section-tag tag-live">Interactive</span>
+          </div>
+          <div id="safety-heatmap" style="overflow-x:auto; padding:8px 0;"></div>
+          <div style="display:flex; gap:12px; margin-top:12px; align-items:center; flex-wrap:wrap;">
+            <span style="font-size:10px; color:#5d8aa8;">Risk Level:</span>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <div style="width:14px; height:14px; border-radius:3px; background:rgba(26,188,156,0.5);"></div><span style="font-size:10px; color:#a8c4d8;">0 accidents</span>
+            </div>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <div style="width:14px; height:14px; border-radius:3px; background:rgba(192,57,43,0.4);"></div><span style="font-size:10px; color:#a8c4d8;">Low risk</span>
+            </div>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <div style="width:14px; height:14px; border-radius:3px; background:rgba(192,57,43,0.7);"></div><span style="font-size:10px; color:#a8c4d8;">High risk</span>
+            </div>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <div style="width:14px; height:14px; border-radius:3px; background:rgba(231,76,60,0.95);"></div><span style="font-size:10px; color:#a8c4d8;">Critical</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="summary-box">
+          <strong>Safety Key Insights:</strong> Total accidents reduced from <strong>141 (FY2009)</strong> to <strong>33 (FY2024)</strong> — a reduction of <strong>76.6%</strong>.
+          Derailments fell from <strong>84 to 20</strong> (76.2% reduction), collisions from <strong>28 to 4</strong> (85.7% reduction).
+          Key safety drivers: Kavach ATPS deployment, elimination of unmanned level crossings (31,836 → 9,500), LHB coach adoption, and Track Renewal Programs.
+          Casualties reduced from <strong>390 (FY2009)</strong> to <strong>62 (FY2024)</strong> — a 84.1% reduction.
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════
+           PAGE 6: CANCELLATION & DELAY
+           ════════════════════════════════════════ -->
+      <div id="page-cancellation" class="page">
+        <div class="page-banner">
+          <div class="banner-icon">⏱️</div>
+          <div class="banner-text">
+            <div class="banner-title">Train Cancellation & Delay Analytics</div>
+            <div class="banner-desc">Punctuality trends, cancellation reasons, delay classifications, weather impact & Vande Bharat performance</div>
+          </div>
+          <div class="banner-stats">
+            <div class="banner-stat"><div class="banner-stat-value">87.3%</div><div class="banner-stat-label">FY24 Punctuality</div></div>
+            <div class="banner-stat"><div class="banner-stat-value">9,900</div><div class="banner-stat-label">Cancellations FY24</div></div>
+            <div class="banner-stat"><div class="banner-stat-value">27 min</div><div class="banner-stat-label">Avg Delay</div></div>
+          </div>
+        </div>
+
+        <div class="chart-card mb-24">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-card-title">🎯 Punctuality Trend by Train Category</div>
+              <div class="chart-card-sub">Overall · Mail/Express · Express · Vande Bharat punctuality (% on-time)</div>
+            </div>
+            <span class="section-tag tag-fy24" style="background:rgba(26,188,156,0.1); color:#1abc9c; border-color:rgba(26,188,156,0.25);">87.3% Overall</span>
+          </div>
+          <div class="chart-container tall">
+            <canvas id="chart-punctuality"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-grid chart-grid-2">
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">🚫 Train Cancellations Trend</div>
+                <div class="chart-card-sub">Annual cancellations — blue=normal, green=low, red=high</div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-cancellation"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">🔍 Cancellation Reason Breakdown (FY2024)</div>
+                <div class="chart-card-sub">Primary causes of train cancellations</div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-cancel-reasons"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-grid chart-grid-2">
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">⏰ Delay Reasons Analysis</div>
+                <div class="chart-card-sub">Polar area chart of delay causes in FY2024</div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-delay-reasons"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">📅 Monthly Cancellation Seasonality</div>
+                <div class="chart-card-sub">Seasonal demand index — peak vs trough months</div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-seasonal-cancel"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="summary-box">
+          <strong>Punctuality Insights:</strong> Overall punctuality improved from <strong>74.5% (FY2009)</strong> to <strong>87.3% (FY2024)</strong>.
+          Vande Bharat leads at <strong>93.5%</strong>. COVID-19 lockdown paradoxically improved punctuality to <strong>86.5% (FY2020)</strong> due to reduced traffic.
+          Technical failures account for <strong>22%</strong> of cancellations, followed by path/crossing conflicts at <strong>17%</strong>.
+          Average delay reduced from <strong>48 minutes (FY2009)</strong> to <strong>27 minutes (FY2024)</strong>.
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════
+           PAGE 7: ZONE PERFORMANCE
+           ════════════════════════════════════════ -->
+      <div id="page-zone" class="page">
+        <div class="page-banner">
+          <div class="banner-icon">🗺️</div>
+          <div class="banner-text">
+            <div class="banner-title">Railway Zone Performance Rankings (FY2024)</div>
+            <div class="banner-desc">Comparative performance across 17 zones — revenue, passengers, freight, safety & punctuality rankings</div>
+          </div>
+          <div class="banner-stats">
+            <div class="banner-stat"><div class="banner-stat-value">17</div><div class="banner-stat-label">Railway Zones</div></div>
+            <div class="banner-stat"><div class="banner-stat-value">Northern</div><div class="banner-stat-label">Revenue Leader</div></div>
+            <div class="banner-stat"><div class="banner-stat-value">Metro</div><div class="banner-stat-label">Best Punctuality</div></div>
+          </div>
+        </div>
+
+        <!-- Zone Rankings Table -->
+        <div class="chart-card mb-24">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-card-title">🏆 Zone Performance Ranking Table (FY2024)</div>
+              <div class="chart-card-sub">Ranked by revenue · Click column headers to sort · Hover rows to highlight</div>
+            </div>
+            <button class="topbar-btn" id="download-zone-csv" style="font-size:10.5px; padding:4px 10px;">📥 Export CSV</button>
+          </div>
+          <div class="data-table-wrap">
+            <table class="data-table" id="zone-ranking-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Zone</th>
+                  <th>Revenue (₹ Cr)</th>
+                  <th>Passengers</th>
+                  <th>Freight</th>
+                  <th>Route KM</th>
+                  <th>Punctuality</th>
+                  <th>Accidents</th>
+                </tr>
+              </thead>
+              <tbody id="zone-table-body">
+                <tr><td colspan="8" style="text-align:center; padding:20px; color:#5d8aa8;">Loading zone data...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="chart-grid chart-grid-2">
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">🕸️ Zone Performance Radar Chart</div>
+                <div class="chart-card-sub">Top 8 zones by revenue — multi-dimensional comparison</div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-zone-radar"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">👥 Zone-wise Passengers (FY2024)</div>
+                <div class="chart-card-sub">Passenger traffic in millions by zone</div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-zone-passengers"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-card-title">📦 Zone-wise Freight Loading (FY2024)</div>
+              <div class="chart-card-sub">Freight in million tonnes by zone (Metro excluded)</div>
+            </div>
+          </div>
+          <div class="chart-container" style="height:300px;">
+            <canvas id="chart-zone-freight-bar"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════
+           PAGE 8: FORECASTING & AI INSIGHTS
+           ════════════════════════════════════════ -->
+      <div id="page-forecast" class="page">
+        <div class="page-banner">
+          <div class="banner-icon">🔮</div>
+          <div class="banner-text">
+            <div class="banner-title">Forecasting & AI Insights (FY2025–FY2029)</div>
+            <div class="banner-desc">Machine learning–based 5-year forecasts for passengers, revenue, freight & safety metrics with confidence intervals</div>
+          </div>
+          <div class="banner-stats">
+            <div class="banner-stat"><div class="banner-stat-value" style="color:#c084fc;">14.5B</div><div class="banner-stat-label">Passengers 2029</div></div>
+            <div class="banner-stat"><div class="banner-stat-value" style="color:#f39c12;">₹460K Cr</div><div class="banner-stat-label">Revenue 2029</div></div>
+            <div class="banner-stat"><div class="banner-stat-value" style="color:#1abc9c;">2,100 MT</div><div class="banner-stat-label">Freight 2029</div></div>
+          </div>
+        </div>
+
+        <div class="forecast-annotation">
+          <div class="forecast-annotation-icon">🤖</div>
+          <div class="forecast-annotation-text">
+            <strong>AI Forecasting Methodology:</strong> Projections use CAGR-based trend analysis with demographic adjustments, GDP growth linkage (elasticity coefficient = 1.2), seasonal decomposition, and Monte Carlo simulation.
+            Data sources include 15 years of Indian Railways Annual Statistical Statements (FY2009–FY2024). Confidence intervals range from <strong>72%–92%</strong> for the 5-year horizon.
+          </div>
+        </div>
+
+        <!-- Forecast KPIs for 2029 -->
+        <div class="forecast-grid mb-24">
+          <div class="forecast-card">
+            <div class="forecast-year">FY2029 Target</div>
+            <div class="forecast-metric">Passengers</div>
+            <div class="forecast-value" style="color:#2563d4;">14.5B</div>
+            <div class="forecast-change text-green">↑ +42.2% vs FY2024</div>
+            <div class="forecast-confidence">Confidence: 72%</div>
+            <div class="confidence-bar"><div class="confidence-fill" style="width:72%; background:#2563d4;"></div></div>
+          </div>
+          <div class="forecast-card">
+            <div class="forecast-year">FY2029 Target</div>
+            <div class="forecast-metric">Total Revenue</div>
+            <div class="forecast-value" style="color:#f39c12;">₹460K Cr</div>
+            <div class="forecast-change text-green">↑ +66.7% vs FY2024</div>
+            <div class="forecast-confidence">Confidence: 72%</div>
+            <div class="confidence-bar"><div class="confidence-fill" style="width:72%; background:#f39c12;"></div></div>
+          </div>
+          <div class="forecast-card">
+            <div class="forecast-year">FY2029 Target</div>
+            <div class="forecast-metric">Freight</div>
+            <div class="forecast-value" style="color:#1abc9c;">2,100 MT</div>
+            <div class="forecast-change text-green">↑ +29.6% vs FY2024</div>
+            <div class="forecast-confidence">Confidence: 75%</div>
+            <div class="confidence-bar"><div class="confidence-fill" style="width:75%; background:#1abc9c;"></div></div>
+          </div>
+          <div class="forecast-card">
+            <div class="forecast-year">FY2029 Target</div>
+            <div class="forecast-metric">Accidents</div>
+            <div class="forecast-value" style="color:#e74c3c;">15</div>
+            <div class="forecast-change text-green">↓ -54.5% vs FY2024</div>
+            <div class="forecast-confidence">Confidence: 78%</div>
+            <div class="confidence-bar"><div class="confidence-fill" style="width:78%; background:#e74c3c;"></div></div>
+          </div>
+          <div class="forecast-card">
+            <div class="forecast-year">FY2029 Target</div>
+            <div class="forecast-metric">Punctuality</div>
+            <div class="forecast-value" style="color:#c084fc;">95.0%</div>
+            <div class="forecast-change text-green">↑ +7.7pp vs FY2024</div>
+            <div class="forecast-confidence">Confidence: 70%</div>
+            <div class="confidence-bar"><div class="confidence-fill" style="width:70%; background:#8e44ad;"></div></div>
+          </div>
+        </div>
+
+        <!-- Forecast Charts -->
+        <div class="chart-grid chart-grid-2 mb-24">
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">🔮 Passenger Traffic Forecast</div>
+                <div class="chart-card-sub">Historical + 5-year projection (dashed = forecast)</div>
+              </div>
+              <span class="section-tag tag-ai">AI Model</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-forecast-passengers"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">🔮 Revenue Forecast</div>
+                <div class="chart-card-sub">₹ Thousand Crore — historical + 5-year projection</div>
+              </div>
+              <span class="section-tag tag-ai">AI Model</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-forecast-revenue"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-grid chart-grid-2 mb-24">
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">🔮 Freight Forecast</div>
+                <div class="chart-card-sub">Million tonnes — demand-led projection</div>
+              </div>
+              <span class="section-tag tag-ai">AI Model</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-forecast-freight"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">🔮 Accident Safety Forecast</div>
+                <div class="chart-card-sub">Zero accident goal trajectory with ATPS/Kavach rollout</div>
+              </div>
+              <span class="section-tag tag-ai">AI Model</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-forecast-accidents"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Forecast Table -->
+        <div class="chart-card mb-24">
+          <div class="chart-card-header">
+            <div class="chart-card-title">📋 5-Year Forecast Summary Table (FY2025–FY2029)</div>
+            <div class="chart-card-sub">All metrics with growth vs FY2024 baseline and model confidence</div>
+          </div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Year</th>
+                  <th>Passengers</th>
+                  <th>Total Revenue</th>
+                  <th>Freight</th>
+                  <th>Accidents</th>
+                  <th>Punctuality</th>
+                  <th>Confidence</th>
+                </tr>
+              </thead>
+              <tbody id="forecast-table-body">
+                <tr><td colspan="7" style="text-align:center; padding:20px; color:#5d8aa8;">Loading forecast data...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- AI Insights Section -->
+        <div class="section-header mb-16">
+          <div>
+            <div class="section-title">🤖 AI-Generated Business Insights</div>
+            <div class="section-subtitle">Automated intelligence from 15-year trend analysis & pattern recognition</div>
+          </div>
+          <span class="section-tag tag-ai">8 Insights</span>
+        </div>
+        <div class="insights-grid" id="ai-insights-container">
+          <div class="insight-card"><div style="text-align:center; padding:20px;"><div class="spinner"></div></div></div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════
+           PAGE 9: YEAR DATA EXPLORER
+           ════════════════════════════════════════ -->
+      <div id="page-yearexplorer" class="page">
+        <div class="page-banner">
+          <div class="banner-icon">📅</div>
+          <div class="banner-text">
+            <div class="banner-title">Year Data Explorer — Drill Down by Year</div>
+            <div class="banner-desc">Select any fiscal year (FY2009–FY2024) to see complete statistics: passengers, revenue, freight, safety, infrastructure & rolling stock</div>
+          </div>
+          <div class="banner-stats">
+            <div class="banner-stat"><div class="banner-stat-value">16</div><div class="banner-stat-label">Years Available</div></div>
+            <div class="banner-stat"><div class="banner-stat-value">30+</div><div class="banner-stat-label">Metrics Per Year</div></div>
+            <div class="banner-stat"><div class="banner-stat-value">Official</div><div class="banner-stat-label">IR Annual Reports</div></div>
+          </div>
+        </div>
+
+        <!-- Year Selector Grid -->
+        <div class="chart-card mb-24">
+          <div class="chart-card-header">
+            <div class="chart-card-title">📅 Select a Fiscal Year</div>
+            <div class="chart-card-sub">Click any year to view detailed statistics</div>
+          </div>
+          <div id="year-btn-grid" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;"></div>
+        </div>
+
+        <!-- Year Snapshot Panel -->
+        <div id="year-snapshot-panel" style="display:none;">
+
+          <div id="year-snapshot-banner" class="page-banner" style="margin-bottom:20px; border-radius:14px;"></div>
+
+          <!-- Row 1: Passenger + Revenue -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <div class="chart-card-title">🧑‍🤝‍🧑 Passenger Statistics</div>
+              </div>
+              <div id="ys-passengers" style="margin-top:8px;"></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <div class="chart-card-title">💰 Revenue Statistics</div>
+              </div>
+              <div id="ys-revenue" style="margin-top:8px;"></div>
+            </div>
+          </div>
+
+          <!-- Row 2: Freight + Safety -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <div class="chart-card-title">📦 Freight Statistics</div>
+              </div>
+              <div id="ys-freight" style="margin-top:8px;"></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <div class="chart-card-title">🛡️ Safety Statistics</div>
+              </div>
+              <div id="ys-safety" style="margin-top:8px;"></div>
+            </div>
+          </div>
+
+          <!-- Row 3: Infrastructure + Rolling Stock -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <div class="chart-card-title">🏗️ Infrastructure</div>
+              </div>
+              <div id="ys-infra" style="margin-top:8px;"></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <div class="chart-card-title">🚂 Rolling Stock & Workforce</div>
+              </div>
+              <div id="ys-rolling" style="margin-top:8px;"></div>
+            </div>
+          </div>
+
+          <!-- Row 4: Full comparison table -->
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div class="chart-card-title">📊 Year-on-Year Comparison</div>
+              <div class="chart-card-sub">Selected year vs previous year and FY2009 baseline</div>
+            </div>
+            <div id="ys-comparison" style="margin-top:12px; overflow-x:auto;"></div>
+          </div>
+
+        </div>
+
+        <!-- Full Historical Table -->
+        <div class="chart-card" style="margin-top:16px;">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-card-title">📋 Complete 16-Year Data Table (All Metrics)</div>
+              <div class="chart-card-sub">Source: Indian Railways Annual Statistical Statements | official figures</div>
+            </div>
+            <button class="topbar-btn" id="download-history-csv" style="font-size:10.5px; padding:4px 10px;">📥 Export CSV</button>
+          </div>
+          <div style="overflow-x:auto; margin-top:12px;">
+            <table id="full-history-table" class="data-table" style="width:100%; border-collapse:collapse; font-size:11px;">
+              <thead id="fht-head"></thead>
+              <tbody id="fht-body"></tbody>
+            </table>
+          </div>
+          <div style="margin-top:10px; padding:10px 14px; background:rgba(192,57,43,0.06); border:1px solid rgba(192,57,43,0.18); border-radius:8px; font-size:10.5px; color:#a8c4d8;">
+            ⚠️ <strong style="color:#e8f4f8;">Data Accuracy Note:</strong>
+            FY2021 passenger crash (1,252M) corrected from earlier version. Operating ratio FY2021 was 176.3% (not 142%) due to COVID.
+            FY2024 figures are provisional. Freight FY2024: 1,588 MT (official), Revenue: ~₹2.58L Cr.
+            Zone breakdowns are proportional estimates. Forecast 2025-29 is model-based, not official IR target.
+            Source: <a href="https://indianrailways.gov.in" style="color:#60a5fa;">indianrailways.gov.in</a> Annual Reports.
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════
+           PAGE 10: ANALYTICS SANDBOX
+           ════════════════════════════════════════ -->
+      <div id="page-sandbox" class="page">
+        <div class="page-banner">
+          <div class="banner-icon">🧪</div>
+          <div class="banner-text">
+            <div class="banner-title">Advanced Analytics Sandbox</div>
+            <div class="banner-desc">Explore correlation coefficients, perform linear regressions, simulate what-if scenarios, and download clean datasets for Excel or Python analysis.</div>
+          </div>
+          <div class="banner-stats">
+            <div class="banner-stat"><div class="banner-stat-value" id="sandbox-stats-count">30+</div><div class="banner-stat-label">Variables Linked</div></div>
+            <div class="banner-stat"><div class="banner-stat-value" id="sandbox-correlation-badge">r = 0.95</div><div class="banner-stat-label">Max Correlation</div></div>
+            <div class="banner-stat"><div class="banner-stat-value">Simulate</div><div class="banner-stat-label">Dynamic Forecasts</div></div>
+          </div>
+        </div>
+
+        <!-- Sandbox Tabs -->
+        <div class="sandbox-tabs-nav" style="display:flex; gap:8px; margin-bottom:20px; border-bottom:1px solid rgba(30,77,154,0.2); padding-bottom:10px;">
+          <button class="chart-btn active" data-sandbox-tab="correlation" style="font-size:12px; padding:6px 14px; border-radius:8px;">📊 Correlation & Regression</button>
+          <button class="chart-btn" data-sandbox-tab="simulator" style="font-size:12px; padding:6px 14px; border-radius:8px;">🔮 What-If Scenario Builder</button>
+          <button class="chart-btn" data-sandbox-tab="dictionary" style="font-size:12px; padding:6px 14px; border-radius:8px;">📋 Data Dictionary & Export</button>
+        </div>
+
+        <!-- TAB 1: CORRELATION & REGRESSION -->
+        <div id="sandbox-tab-correlation" class="sandbox-tab-content active-tab">
+          <div style="display:grid; grid-template-columns: 320px 1fr; gap:18px; margin-bottom:24px;">
+            <!-- Controls Card -->
+            <div class="chart-card" style="display:flex; flex-direction:column; gap:14px;">
+              <div class="chart-card-header" style="margin-bottom:0;">
+                <div>
+                  <div class="chart-card-title">⚙️ Regression Config</div>
+                  <div class="chart-card-sub">Select variables to test hypothesis</div>
+                </div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
+                <label for="corr-x-var" style="font-size:11px; color:#5d8aa8; font-weight:600;">Independent Variable (X-Axis)</label>
+                <select class="filter-select" id="corr-x-var" style="width:100%; box-sizing:border-box;">
+                  <option value="infrastructure.electrifiedKm">Route Electrification (km)</option>
+                  <option value="passengers.passengerKm">Passenger-KM (Billion)</option>
+                  <option value="freight.total">Freight Loading (Million Tonnes)</option>
+                  <option value="infrastructure.levelCrossings">Level Crossings (Remaining)</option>
+                  <option value="employees.total">Total Employees (Count)</option>
+                  <option value="premiumTrains.vandeBharat">Vande Bharat Fleet Count</option>
+                  <option value="revenue.total">Total Revenue (₹ Crore)</option>
+                </select>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                <label for="corr-y-var" style="font-size:11px; color:#5d8aa8; font-weight:600;">Dependent Variable (Y-Axis)</label>
+                <select class="filter-select" id="corr-y-var" style="width:100%; box-sizing:border-box;">
+                  <option value="revenue.operatingRatio">Operating Ratio (%)</option>
+                  <option value="accidents.total">Total Accidents (Count)</option>
+                  <option value="revenue.passenger">Passenger Revenue (₹ Crore)</option>
+                  <option value="revenue.freight">Freight Revenue (₹ Crore)</option>
+                  <option value="revenue.total" selected>Total Revenue (₹ Crore)</option>
+                  <option value="passengers.total">Total Passengers Originating (M)</option>
+                </select>
+              </div>
+
+              <!-- Real-time Stats Calculations -->
+              <div style="margin-top:12px; display:flex; flex-direction:column; gap:10px; padding-top:12px; border-top:1px solid rgba(30,77,154,0.18);">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:11.5px; color:#a8c4d8;">Pearson Correlation (r)</span>
+                  <span id="stat-r-val" class="mini-kpi-val" style="font-size:18px; color:#f39c12;">0.00</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:11.5px; color:#a8c4d8;">R-Squared (R²)</span>
+                  <span id="stat-r2-val" class="mini-kpi-val" style="font-size:18px; color:#1abc9c;">0.00</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:11.5px; color:#a8c4d8;">Regression Model</span>
+                  <span id="stat-eq-val" style="font-family:'Rajdhani',sans-serif; font-size:13px; font-weight:600; color:#fff;">y = mx + c</span>
+                </div>
+              </div>
+              
+              <!-- Descriptive Statistics for selection -->
+              <div style="margin-top:12px; padding:10px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:8px; font-size:10.5px; line-height:1.6; color:#a8c4d8;">
+                <div style="font-weight:700; color:#fff; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid rgba(30,77,154,0.25); padding-bottom:3px;">📊 Descriptive Stats Toolkit</div>
+                <div style="margin-bottom:6px;">
+                  <strong style="color:#e8f4f8;">[X Variable Stats]</strong><br>
+                  Mean: <span id="stat-x-mean" style="color:#60a5fa; font-weight:600;">—</span> | Median: <span id="stat-x-median" style="color:#60a5fa;">—</span><br>
+                  Std Dev: <span id="stat-x-sd" style="color:#60a5fa;">—</span> | Volatility (CV): <span id="stat-x-cv" style="color:#60a5fa;">—</span><br>
+                  15Y CAGR: <span id="stat-x-cagr" style="color:#60a5fa;">—</span>
+                </div>
+                <div>
+                  <strong style="color:#e8f4f8;">[Y Variable Stats]</strong><br>
+                  Mean: <span id="stat-y-mean" style="color:#1abc9c; font-weight:600;">—</span> | Median: <span id="stat-y-median" style="color:#1abc9c;">—</span><br>
+                  Std Dev: <span id="stat-y-sd" style="color:#1abc9c;">—</span> | Volatility (CV): <span id="stat-y-cv" style="color:#1abc9c;">—</span><br>
+                  15Y CAGR: <span id="stat-y-cagr" style="color:#1abc9c;">—</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Chart Card -->
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <div>
+                  <div class="chart-card-title" id="regression-chart-title">📈 Linear Regression & Scatter Fit</div>
+                  <div class="chart-card-sub" id="regression-chart-subtitle">Analyzing mathematical correlation over 16-year historical period (FY2009–FY2024)</div>
+                </div>
+                <span class="section-tag tag-live" id="stat-relation-badge">Strong Positive</span>
+              </div>
+              <div class="chart-container tall">
+                <canvas id="chart-regression-scatter"></canvas>
+              </div>
+              <div class="summary-box" id="stat-commentary-box" style="margin-top:14px; font-size:11.5px;">
+                Selecting variables will compute the correlation and fit a line.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: WHAT-IF SCENARIO BUILDER -->
+        <div id="sandbox-tab-simulator" class="sandbox-tab-content">
+          <div style="display:grid; grid-template-columns: 340px 1fr; gap:18px; margin-bottom:24px;">
+            <!-- Controls Card -->
+            <div class="chart-card" style="display:flex; flex-direction:column; gap:16px;">
+              <div class="chart-card-header" style="margin-bottom:0;">
+                <div>
+                  <div class="chart-card-title">🎛️ Scenario Parameters</div>
+                  <div class="chart-card-sub">Adjust variables to simulate future growth targets (FY25–FY29)</div>
+                </div>
+              </div>
+
+              <!-- Sliders -->
+              <div style="display:flex; flex-direction:column; gap:12px; margin-top:8px;">
+                <div>
+                  <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:11.5px;">
+                    <span style="color:#a8c4d8; font-weight:600;">GDP Elasticity (Passengers)</span>
+                    <span id="slider-gdp-val" style="color:#f39c12; font-weight:700;">1.20</span>
+                  </div>
+                  <input type="range" class="scenario-slider" id="slider-gdp" min="0.5" max="2.2" step="0.05" value="1.20" style="width:100%;">
+                  <div style="display:flex; justify-content:space-between; font-size:9px; color:#5d8aa8;">
+                    <span>Low Growth (0.5)</span>
+                    <span>High Elasticity (2.2)</span>
+                  </div>
+                </div>
+
+                <div>
+                  <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:11.5px;">
+                    <span style="color:#a8c4d8; font-weight:600;">Annual Vande Bharat Deliveries</span>
+                    <span id="slider-vb-val" style="color:#c084fc; font-weight:700;">30 / yr</span>
+                  </div>
+                  <input type="range" class="scenario-slider" id="slider-vb" min="5" max="60" step="5" value="30" style="width:100%;">
+                  <div style="display:flex; justify-content:space-between; font-size:9px; color:#5d8aa8;">
+                    <span>Minimal (5)</span>
+                    <span>Aggressive (60)</span>
+                  </div>
+                </div>
+
+                <div>
+                  <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:11.5px;">
+                    <span style="color:#a8c4d8; font-weight:600;">Safety Budget Multiplier</span>
+                    <span id="slider-safety-val" style="color:#e74c3c; font-weight:700;">1.00x</span>
+                  </div>
+                  <input type="range" class="scenario-slider" id="slider-safety" min="0.5" max="2.5" step="0.1" value="1.00" style="width:100%;">
+                  <div style="display:flex; justify-content:space-between; font-size:9px; color:#5d8aa8;">
+                    <span>Austerity (0.5x)</span>
+                    <span>Modernization (2.5x)</span>
+                  </div>
+                </div>
+
+                <div>
+                  <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:11.5px;">
+                    <span style="color:#a8c4d8; font-weight:600;">Freight Load Growth driver</span>
+                    <span id="slider-freight-val" style="color:#1abc9c; font-weight:700;">4.0% / yr</span>
+                  </div>
+                  <input type="range" class="scenario-slider" id="slider-freight" min="0.0" max="10.0" step="0.5" value="4.0" style="width:100%;">
+                  <div style="display:flex; justify-content:space-between; font-size:9px; color:#5d8aa8;">
+                    <span>Stagnant (0%)</span>
+                    <span>Super-Cycle (10%)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-top:8px; border-top:1px solid rgba(30,77,154,0.18); padding-top:12px;">
+                <button class="topbar-btn primary" id="reset-scenario-btn" style="width:100%; justify-content:center;">
+                  🔄 Reset Parameters
+                </button>
+              </div>
+            </div>
+
+            <!-- Simulation Charts & Targets -->
+            <div style="display:flex; flex-direction:column; gap:16px;">
+              <!-- 2029 Target Cards Comparison -->
+              <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px;">
+                <div class="mini-kpi" style="border-color: rgba(37,99,212,0.25); text-align:left; padding:12px;">
+                  <div class="mini-kpi-lbl">FY2029 Passengers</div>
+                  <div class="mini-kpi-val" id="sim-kpi-passengers" style="font-size:22px; color:#2563d4; margin-top:4px;">11,000M</div>
+                  <div style="font-size:9.5px; color:#5d8aa8; margin-top:2px;">Baseline: 11,000M</div>
+                </div>
+                <div class="mini-kpi" style="border-color: rgba(243,156,18,0.25); text-align:left; padding:12px;">
+                  <div class="mini-kpi-lbl">FY2029 Revenue</div>
+                  <div class="mini-kpi-val" id="sim-kpi-revenue" style="font-size:22px; color:#f39c12; margin-top:4px;">₹415K Cr</div>
+                  <div style="font-size:9.5px; color:#5d8aa8; margin-top:2px;">Baseline: ₹415K Cr</div>
+                </div>
+                <div class="mini-kpi" style="border-color: rgba(231,76,60,0.25); text-align:left; padding:12px;">
+                  <div class="mini-kpi-lbl">FY2029 Accidents</div>
+                  <div class="mini-kpi-val" id="sim-kpi-accidents" style="font-size:22px; color:#e74c3c; margin-top:4px;">15</div>
+                  <div style="font-size:9.5px; color:#5d8aa8; margin-top:2px;">Baseline: 15</div>
+                </div>
+              </div>
+
+              <!-- Main Simulated Projections Chart -->
+              <div class="chart-card">
+                <div class="chart-card-header">
+                  <div>
+                    <div class="chart-card-title">🔮 Projections Simulation: Baseline vs. What-If Scenario</div>
+                    <div class="chart-card-sub">Dashed lines represent default baseline forecast. Solid lines show results under custom parameters.</div>
+                  </div>
+                  <div style="display:flex; gap:6px;">
+                    <button class="chart-btn active" id="sim-chart-metric-pass">Passengers</button>
+                    <button class="chart-btn" id="sim-chart-metric-rev">Revenue</button>
+                    <button class="chart-btn" id="sim-chart-metric-acc">Accidents</button>
+                  </div>
+                </div>
+                <div class="chart-container tall">
+                  <canvas id="chart-sandbox-simulator"></canvas>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
+                  <span style="font-size:10px; color:#5d8aa8;">* Projections are simulated using historical elasticity models and are for visualization purposes.</span>
+                  <button class="topbar-btn" id="download-sim-csv" style="font-size:10.5px; padding:4px 10px;">📥 Download Simulation CSV</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: DATA DICTIONARY & EXPORT -->
+        <div id="sandbox-tab-dictionary" class="sandbox-tab-content">
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">📖 Data Dictionary & Provenance</div>
+                <div class="chart-card-sub">Detailed description and formula documentation for the historical dataset</div>
+              </div>
+              <button class="topbar-btn primary" id="download-full-csv" style="font-size:12px;">
+                📥 Download Full Historical Dataset (CSV)
+              </button>
+            </div>
+            
+            <div class="data-table-wrap" style="margin-top:12px;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th style="width:20%;">Variable Name</th>
+                    <th style="width:12%;">Data Type</th>
+                    <th style="width:15%;">Formula / Unit</th>
+                    <th style="width:38%;">Definition & Statistical Context</th>
+                    <th style="width:15%;">Official Source</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="font-bold text-white">passengers.total</td>
+                    <td style="color:#60a5fa;">Integer</td>
+                    <td>Millions (Originating)</td>
+                    <td>Total passenger bookings starting within the fiscal year. Heavy peak in FY2019 pre-COVID, collapsed in FY2021 by 84.5%.</td>
+                    <td>IR Table 1.1</td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-white">passengers.passengerKm</td>
+                    <td style="color:#60a5fa;">Integer</td>
+                    <td>Billion PKM</td>
+                    <td>Total distance traveled by all passengers. Obtained by multiplying total passengers originating by the average lead distance.</td>
+                    <td>IR Annual Report</td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-white">revenue.passenger</td>
+                    <td style="color:#60a5fa;">Integer</td>
+                    <td>₹ Crore (₹10M)</td>
+                    <td>Gross earnings from passenger transport operations. Correlates highly with passenger-km ($r > 0.9$).</td>
+                    <td>Union Budget</td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-white">revenue.freight</td>
+                    <td style="color:#60a5fa;">Integer</td>
+                    <td>₹ Crore (₹10M)</td>
+                    <td>Gross earnings from commodity freight shipping operations. Accounts for ~68% of total revenue.</td>
+                    <td>Union Budget</td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-white">revenue.operatingRatio</td>
+                    <td style="color:#1abc9c;">Float</td>
+                    <td>Percentage (%)</td>
+                    <td>Operating Ratio = (Working Expenses / Gross Earnings) × 100. Lower is more efficient. Exceeded 170% in FY2021 due to COVID overheads.</td>
+                    <td>Audited Accounts</td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-white">freight.total</td>
+                    <td style="color:#60a5fa;">Integer</td>
+                    <td>Million Tonnes (MT)</td>
+                    <td>Total tonnage of commodity cargo loaded originating across the network. Highly correlated with GDP growth.</td>
+                    <td>Freight Stats</td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-white">accidents.total</td>
+                    <td style="color:#60a5fa;">Integer</td>
+                    <td>Accident Count</td>
+                    <td>Sum of train derailments, collisions, fires, and level crossing accidents. Decreased by 76.6% over the 15-year period.</td>
+                    <td>Safety Directorate</td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-white">infrastructure.electrifiedKm</td>
+                    <td style="color:#60a5fa;">Integer</td>
+                    <td>Route Kilometers</td>
+                    <td>Electrified route length. Electrification grew from 18,274 km (FY2009) to 68,000 km (FY2024), completing 100% broad gauge electrification.</td>
+                    <td>Mission Electrification</td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-white">employees.total</td>
+                    <td style="color:#60a5fa;">Integer</td>
+                    <td>Count</td>
+                    <td>Total personnel active in operations and management. Has decreased steadily, improving productivity per route kilometer.</td>
+                    <td>IR Manpower Table</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /page-content -->
+  </main>
+</div><!-- /app-layout -->
+
+<!-- ─── SCRIPTS ───────────────────────────────────────── -->
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<!-- Chart.js Annotation Plugin -->
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Our modules -->
+<script src="data.js?v=20260618"></script>
+<script src="charts.js?v=20260618"></script>
+<script src="app.js?v=20260618"></script>
+
+<!-- Redundant inline script removed to let app.js handle everything cleanly -->
+
+</body>
+</html>
